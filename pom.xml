@@ -4,21 +4,23 @@
     <groupId>mc.alk.arena</groupId>
     <artifactId>ArenaSpleef</artifactId>
     <packaging>jar</packaging>
-    <version>1.5.3</version>
+    <version>1.6.0</version>
     <name>ArenaSpleef</name>
+    <url>https://github.com/BattlePlugins/ArenaSpleef</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    <url>http://maven.apache.org</url>
     <!-- Locations for jar repositories -->
     <repositories>
         <repository>
-            <id>battleplugins-repo</id>
-            <url>http://server.battleplugins.com/maven/repository/</url>
+            <id>rainbowcraft-repo</id>
+            <url>http://rainbowcraft.sytes.net/maven/repository/</url>
         </repository>
         <repository>
-            <id>bukkit-repo</id>
-            <url>http://repo.bukkit.org/content/groups/public</url>
+            <id>bukkit-public</id>
+            <url>https://repo.md-5.net/content/repositories/public/</url>
         </repository>
         <repository>
             <id>sk89q-repo</id>
@@ -37,7 +39,7 @@
         <dependency>
             <groupId>mc.alk</groupId>
             <artifactId>BattleArena</artifactId>
-            <version>3.9.9.11</version>
+            <version>3.9.11.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

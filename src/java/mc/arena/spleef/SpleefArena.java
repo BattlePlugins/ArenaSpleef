@@ -1,9 +1,5 @@
 package mc.arena.spleef;
 
-import com.sk89q.worldedit.bukkit.selections.Selection;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.flags.StateFlag.State;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import mc.alk.arena.alib.bukkitadapter.MaterialAdapter;
+import mc.alk.arena.alib.worldeditutil.controllers.WorldGuardController;
+import mc.alk.arena.alib.worldeditutil.math.BlockSelection;
 import mc.alk.arena.objects.ArenaPlayer;
 import mc.alk.arena.objects.MatchState;
 import mc.alk.arena.objects.StateOption;
@@ -143,7 +143,7 @@ public class SpleefArena extends Arena {
                 return false;
             }
             regions.add(pr);
-            lowestHeight = Math.min(lowestHeight, pr.getMinimumPoint().getBlockY());
+            lowestHeight = Math.min(lowestHeight, WorldGuardController.getBlockSelection(world, pr).getMinimumPoint().getBlockY());
         }
         return true;
     }
@@ -291,8 +291,8 @@ public class SpleefArena extends Arena {
                 && e.getFrom().getBlockY() == e.getTo().getBlockY())
                 || getMatchState() != MatchState.ONSTART
                 || (mc.arena.spleef.Defaults.HEIGHT_LOSS && e.getTo().getBlockY() >= lowestHeight)
-                || (!mc.arena.spleef.Defaults.HEIGHT_LOSS && (e.getTo().getBlock().getType() != Material.STATIONARY_WATER
-                && e.getTo().getBlock().getType() != Material.STATIONARY_LAVA))) {
+                || (!mc.arena.spleef.Defaults.HEIGHT_LOSS && (e.getTo().getBlock().getType() != MaterialAdapter.getMaterial("STATIONARY_WATER")
+                && e.getTo().getBlock().getType() != MaterialAdapter.getMaterial("STATIONARY_LAVA")))) {
             return;
         }
         final String name = e.getPlayer().getName();
@@ -312,7 +312,7 @@ public class SpleefArena extends Arena {
     }
 
     private static boolean superPickItem(ItemStack item) {
-        return item != null && item.getTypeId() == Defaults.SUPERPICK_ITEM;
+        return item != null && item.getType() == MaterialAdapter.getMaterial(Defaults.SUPERPICK_ITEM);
     }
 
     @Override
@@ -375,7 +375,7 @@ public class SpleefArena extends Arena {
         return "ba-spleef-" + getName().toLowerCase() + "-" + layer;
     }
 
-    public void setRegion(Player p, Selection sel, int layer) throws Exception {
+    public void setRegion(Player p, BlockSelection sel, int layer) throws Exception {
         final String layerName = getRegionName(layer);
         if (layerNames == null) {
             layerNames = new CopyOnWriteArrayList<String>();
@@ -389,12 +389,12 @@ public class SpleefArena extends Arena {
         }
         worldName = sel.getWorld().getName();
         WorldGuardUtil.createProtectedRegion(p, layerName);
+
         ProtectedRegion pr = WorldGuardUtil.getRegion(sel.getWorld(), layerName);
         pr.setPriority(11); /// some priority higher than the default 0
-        pr.setFlag(DefaultFlag.PVP, State.DENY);
+        WorldGuardUtil.setFlag(worldName, pr.getId(), "pvp", false);
         /// allow them to build on the layer, we will handle stopping/allowing block breaks
-        pr.setFlag(DefaultFlag.BUILD, State.ALLOW);
-
+        WorldGuardUtil.setFlag(worldName, pr.getId(), "build", true);
         WorldGuardUtil.saveSchematic(p, layerName);
         initProtectedRegions();
     }

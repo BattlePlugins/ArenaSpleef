@@ -1,10 +1,9 @@
 name: ${project.name}
 version: ${project.version}
-
+api-version: 1.13
 main: mc.arena.spleef.ArenaSpleef
 depend: [BattleArena, WorldGuard, WorldEdit]
 authors: [alkarin_v]
-
 commands:
    spleef:
    espleef:
