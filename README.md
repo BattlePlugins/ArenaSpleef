@@ -14,7 +14,7 @@ idea where to start, maybe a 1 on 1 conversation on Discord may be the way to go
 you have a good amount of information about it, creating a new issue might be a better solution:
 
 
-* https://github.com/BattlePlugins/BattleArena/issues
+* https://github.com/BattlePlugins/ArenaSpleef/issues
 
 Setting Up:
 ------------
