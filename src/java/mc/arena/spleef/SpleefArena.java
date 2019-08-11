@@ -11,9 +11,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import mc.alk.arena.alib.arenaregenutil.ArenaRegenController;
+import mc.alk.arena.alib.arenaregenutil.region.ArenaRegion;
+import mc.alk.arena.alib.arenaregenutil.region.ArenaSelection;
 import mc.alk.arena.alib.bukkitadapter.MaterialAdapter;
-import mc.alk.arena.alib.worldeditutil.controllers.WorldGuardController;
-import mc.alk.arena.alib.worldeditutil.math.BlockSelection;
+import mc.alk.arena.alib.worldguardutil.controllers.WorldGuardController;
+import mc.alk.arena.alib.worldguardutil.math.BlockSelection;
 import mc.alk.arena.objects.ArenaPlayer;
 import mc.alk.arena.objects.MatchState;
 import mc.alk.arena.objects.StateOption;
@@ -21,10 +24,10 @@ import mc.alk.arena.objects.arenas.Arena;
 import mc.alk.arena.objects.events.ArenaEventHandler;
 import mc.alk.arena.objects.events.EventPriority;
 import mc.alk.arena.objects.options.TransitionOption;
+import mc.alk.arena.objects.regions.WorldGuardRegion;
 import mc.alk.arena.serializers.Persist;
 import mc.alk.arena.util.Log;
 import mc.alk.arena.util.MessageUtil;
-import mc.alk.arena.util.plugins.WorldGuardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -138,7 +141,7 @@ public class SpleefArena extends Arena {
         }
         regions = new CopyOnWriteArrayList<ProtectedRegion>();
         for (String layerName : layerNames) {
-            ProtectedRegion pr = WorldGuardUtil.getRegion(world, layerName);
+            ProtectedRegion pr = WorldGuardController.getRegion(world, layerName);
             if (pr == null) {
                 return false;
             }
@@ -154,7 +157,7 @@ public class SpleefArena extends Arena {
         }
         for (String layerName : layerNames) {
             if (regenTimes.containsKey(layerName)) {
-                ProtectedRegion pr = WorldGuardUtil.getRegion(world, layerName);
+                ProtectedRegion pr = WorldGuardController.getRegion(world, layerName);
                 startRegenTimer(pr, regenTimes.get(layerName));
             }
         }
@@ -227,7 +230,9 @@ public class SpleefArena extends Arena {
 
     void regenLayer(ProtectedRegion pr) {
         try {
-            WorldGuardUtil.pasteSchematic(Bukkit.getConsoleSender(), pr, pr.getId(), world);
+            ArenaRegion arenaRegion = new WorldGuardRegion(pr.getId(), world);
+            BlockSelection worldGuardSel = WorldGuardController.getBlockSelection(world, pr);
+            ArenaRegenController.pasteSchematic(arenaRegion, worldGuardSel.getMinimumPoint());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -317,13 +322,13 @@ public class SpleefArena extends Arena {
 
     @Override
     public boolean valid() {
-        boolean success = super.valid() && WorldGuardUtil.hasWorldGuard()
+        boolean success = super.valid() && WorldGuardController.hasWorldGuard()
                 && layerNames != null && !layerNames.isEmpty() && worldName != null && Bukkit.getWorld(worldName) != null;
         if (!success) {
             return false;
         }
         for (int i = 0; i < layerNames.size(); i++) {
-            if (!WorldGuardUtil.hasRegion(Bukkit.getWorld(worldName), getRegionName(i))) {
+            if (!WorldGuardController.hasRegion(Bukkit.getWorld(worldName), getRegionName(i))) {
                 return false;
             }
         }
@@ -333,7 +338,7 @@ public class SpleefArena extends Arena {
     @Override
     public List<String> getInvalidReasons() {
         List<String> reasons = new ArrayList<String>();
-        if (!WorldGuardUtil.hasWorldGuard()) {
+        if (!WorldGuardController.hasWorldGuard()) {
             reasons.add("ArenaSpleef needs WorldGuard!");
         }
         World w = null;
@@ -347,9 +352,9 @@ public class SpleefArena extends Arena {
 
         if (layerNames == null || layerNames.isEmpty()) {
             reasons.add("ArenaSpleef arena needs a layer region, and none is defined!");
-        } else if (!lostWorld && WorldGuardUtil.hasWorldGuard()) {
+        } else if (!lostWorld && WorldGuardController.hasWorldGuard()) {
             for (int i = 0; i < layerNames.size(); i++) {
-                if (!WorldGuardUtil.hasRegion(w, getRegionName(i))) {
+                if (!WorldGuardController.hasRegion(w, getRegionName(i))) {
                     reasons.add("ArenaSpleef lost layer " + i + ", please reselect it");
                 }
             }
@@ -375,7 +380,7 @@ public class SpleefArena extends Arena {
         return "ba-spleef-" + getName().toLowerCase() + "-" + layer;
     }
 
-    public void setRegion(Player p, BlockSelection sel, int layer) throws Exception {
+    public void setRegion(Player p, ArenaSelection sel, int layer) throws Exception {
         final String layerName = getRegionName(layer);
         if (layerNames == null) {
             layerNames = new CopyOnWriteArrayList<String>();
@@ -388,14 +393,14 @@ public class SpleefArena extends Arena {
             throw new SpleefException("&cYou need to set layer " + (layerNames.size() + 1) + " before setting this layer!");
         }
         worldName = sel.getWorld().getName();
-        WorldGuardUtil.createProtectedRegion(p, layerName);
+        WorldGuardController.createProtectedRegion(p, layerName);
 
-        ProtectedRegion pr = WorldGuardUtil.getRegion(sel.getWorld(), layerName);
+        ProtectedRegion pr = WorldGuardController.getRegion(sel.getWorld(), layerName);
         pr.setPriority(11); /// some priority higher than the default 0
-        WorldGuardUtil.setFlag(worldName, pr.getId(), "pvp", false);
+        WorldGuardController.setFlag(worldName, pr.getId(), "pvp", false);
         /// allow them to build on the layer, we will handle stopping/allowing block breaks
-        WorldGuardUtil.setFlag(worldName, pr.getId(), "build", true);
-        WorldGuardUtil.saveSchematic(p, layerName);
+        WorldGuardController.setFlag(worldName, pr.getId(), "build", true);
+        ArenaRegenController.saveSchematic(p, layerName);
         initProtectedRegions();
     }
 
@@ -432,7 +437,7 @@ public class SpleefArena extends Arena {
                 if (world == null) {
                     continue;
                 }
-                WorldGuardUtil.deleteRegion(world.getName(), layerName);
+                WorldGuardController.deleteRegion(world.getName(), layerName);
             }
         }
     }

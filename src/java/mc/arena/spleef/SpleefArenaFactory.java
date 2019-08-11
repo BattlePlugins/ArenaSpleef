@@ -5,8 +5,6 @@ import mc.alk.arena.objects.arenas.ArenaFactory;
 import org.bukkit.plugin.Plugin;
 
 /**
- * 
- * 
  * @author Nikolai
  */
 public class SpleefArenaFactory implements ArenaFactory {

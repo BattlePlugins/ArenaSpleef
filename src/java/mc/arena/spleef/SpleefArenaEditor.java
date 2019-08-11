@@ -1,14 +1,12 @@
 package mc.arena.spleef;
 
-import com.sk89q.worldedit.regions.Region;
 import mc.alk.arena.BattleArena;
-import mc.alk.arena.alib.worldeditutil.controllers.WorldGuardController;
-import mc.alk.arena.alib.worldeditutil.math.BlockSelection;
+import mc.alk.arena.alib.arenaregenutil.ArenaRegenController;
+import mc.alk.arena.alib.arenaregenutil.region.ArenaSelection;
 import mc.alk.arena.objects.arenas.Arena;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-
 
 public class SpleefArenaEditor {
 
@@ -25,8 +23,7 @@ public class SpleefArenaEditor {
         if (layerIndex < 1 || layerIndex > Defaults.MAX_LAYERS) {
             throw new SpleefException("&cBad layer index, 1-" + Defaults.MAX_LAYERS);
         }
-        Region weRegion = WorldGuardController.getWorldEditRegion(sender);
-        BlockSelection sel = WorldGuardController.getBlockSelection(weRegion);
+        ArenaSelection sel = ArenaRegenController.getSelection(sender);
         if (sel == null) {
             throw new SpleefException(ChatColor.RED + "Please select an area first using WorldEdit.");
         }
